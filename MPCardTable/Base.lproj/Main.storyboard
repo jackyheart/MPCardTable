@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="9060" systemVersion="15B42" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" initialViewController="Bgr-M2-nE3">
+    <dependencies>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="9051"/>
+        <capability name="Constraints to layout margins" minToolsVersion="6.0"/>
+    </dependencies>
+    <scenes>
+        <!--View Controller-->
+        <scene sceneID="RD9-sT-hah">
+            <objects>
+                <viewController id="Bgr-M2-nE3" customClass="ViewController" customModule="MPCardTable" customModuleProvider="target" sceneMemberID="viewController">
+                    <layoutGuides>
+                        <viewControllerLayoutGuide type="top" id="jNi-yl-yZ0"/>
+                        <viewControllerLayoutGuide type="bottom" id="Fe5-Nb-xk0"/>
+                    </layoutGuides>
+                    <view key="view" contentMode="scaleToFill" id="cA0-oH-kjR">
+                        <rect key="frame" x="0.0" y="0.0" width="600" height="600"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <subviews>
+                            <imageView userInteractionEnabled="NO" contentMode="scaleToFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="table_bg_small" translatesAutoresizingMaskIntoConstraints="NO" id="FpF-0p-egf">
+                                <rect key="frame" x="0.0" y="0.0" width="600" height="600"/>
+                                <animations/>
+                            </imageView>
+                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="Dru-GU-xde">
+                                <rect key="frame" x="435" y="37" width="145" height="30"/>
+                                <animations/>
+                                <constraints>
+                                    <constraint firstAttribute="width" constant="145" id="MdW-CN-Z3e"/>
+                                    <constraint firstAttribute="height" constant="30" id="PDm-ur-4sw"/>
+                                </constraints>
+                                <state key="normal" title="Start Advertising">
+                                    <color key="titleColor" red="1" green="1" blue="1" alpha="1" colorSpace="calibratedRGB"/>
+                                </state>
+                                <connections>
+                                    <action selector="startAdvertising:" destination="Bgr-M2-nE3" eventType="touchUpInside" id="TLo-k9-ob3"/>
+                                </connections>
+                            </button>
+                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="G3n-5f-Zt9">
+                                <rect key="frame" x="503" y="82" width="97" height="30"/>
+                                <animations/>
+                                <constraints>
+                                    <constraint firstAttribute="width" constant="97" id="4dH-Hh-y6J"/>
+                                    <constraint firstAttribute="height" constant="30" id="E4g-yj-qU9"/>
+                                </constraints>
+                                <state key="normal" title="Flip">
+                                    <color key="titleColor" red="1" green="1" blue="1" alpha="1" colorSpace="calibratedRGB"/>
+                                </state>
+                                <connections>
+                                    <action selector="flip:" destination="Bgr-M2-nE3" eventType="touchUpInside" id="RbS-fL-9sy"/>
+                                </connections>
+                            </button>
+                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="WXm-VU-wjO">
+                                <rect key="frame" x="503" y="127" width="97" height="30"/>
+                                <animations/>
+                                <constraints>
+                                    <constraint firstAttribute="width" constant="97" id="azS-3f-uER"/>
+                                    <constraint firstAttribute="height" constant="30" id="w2p-y8-6SN"/>
+                                </constraints>
+                                <state key="normal" title="Shuffle">
+                                    <color key="titleColor" red="1" green="1" blue="1" alpha="1" colorSpace="calibratedRGB"/>
+                                </state>
+                                <connections>
+                                    <action selector="shuffle:" destination="Bgr-M2-nE3" eventType="touchUpInside" id="oCV-W6-aNc"/>
+                                </connections>
+                            </button>
+                        </subviews>
+                        <animations/>
+                        <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="calibratedWhite"/>
+                        <constraints>
+                            <constraint firstItem="G3n-5f-Zt9" firstAttribute="top" secondItem="jNi-yl-yZ0" secondAttribute="bottom" constant="55" id="4Ia-qV-39o"/>
+                            <constraint firstItem="WXm-VU-wjO" firstAttribute="top" secondItem="G3n-5f-Zt9" secondAttribute="bottom" constant="15" id="9e3-in-A6d"/>
+                            <constraint firstItem="FpF-0p-egf" firstAttribute="top" secondItem="jNi-yl-yZ0" secondAttribute="bottom" constant="-20" id="Q7e-cK-7wU"/>
+                            <constraint firstItem="FpF-0p-egf" firstAttribute="leading" secondItem="cA0-oH-kjR" secondAttribute="leadingMargin" constant="-20" id="XpM-oz-kQl"/>
+                            <constraint firstItem="Fe5-Nb-xk0" firstAttribute="top" secondItem="FpF-0p-egf" secondAttribute="bottom" id="baO-3Y-TaA"/>
+                            <constraint firstAttribute="trailingMargin" secondItem="G3n-5f-Zt9" secondAttribute="trailing" constant="-20" id="cHE-Hc-ZYq"/>
+                            <constraint firstItem="Dru-GU-xde" firstAttribute="top" secondItem="jNi-yl-yZ0" secondAttribute="bottom" constant="17" id="gP5-LL-5re"/>
+                            <constraint firstAttribute="trailingMargin" secondItem="Dru-GU-xde" secondAttribute="trailing" id="keQ-TI-kQP"/>
+                            <constraint firstAttribute="trailingMargin" secondItem="FpF-0p-egf" secondAttribute="trailing" constant="-20" id="mS1-Rn-zgl"/>
+                            <constraint firstAttribute="trailingMargin" secondItem="WXm-VU-wjO" secondAttribute="trailing" constant="-20" id="v1d-F9-Kyc"/>
+                            <constraint firstItem="G3n-5f-Zt9" firstAttribute="top" secondItem="Dru-GU-xde" secondAttribute="bottom" constant="15" id="wZg-iN-Ok1"/>
+                        </constraints>
+                        <variation key="default">
+                            <mask key="constraints">
+                                <exclude reference="4Ia-qV-39o"/>
+                            </mask>
+                        </variation>
+                    </view>
+                    <simulatedOrientationMetrics key="simulatedOrientationMetrics" orientation="landscapeRight"/>
+                </viewController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="zMA-Ah-3qr" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="298" y="303"/>
+        </scene>
+    </scenes>
+    <resources>
+        <image name="table_bg_small" width="400" height="229"/>
+    </resources>
+</document>
