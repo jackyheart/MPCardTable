@@ -32,6 +32,22 @@ extension MutableCollectionType where Index == Int {
     }
 }
 
+// Swift 2 Array Extension
+extension Array where Element: Equatable {
+    
+    mutating func removeObject(object: Element) {
+        if let index = self.indexOf(object) {
+            self.removeAtIndex(index)
+        }
+    }
+    
+    mutating func removeObjectsInArray(array: [Element]) {
+        for object in array {
+            self.removeObject(object)
+        }
+    }
+}
+
 class ViewController: UIViewController, MCAdvertiserAssistantDelegate, MCBrowserViewControllerDelegate, MCSessionDelegate {
     
     //UI
@@ -457,10 +473,13 @@ class ViewController: UIViewController, MCAdvertiserAssistantDelegate, MCBrowser
                                 
                                 try self.session.sendData(cardArchivedData, toPeers: [peerID], withMode: .Reliable)
                                 
+                                //add card to Phone's card array
+                                phone.cardArray.append(cardImgView)
+                                
                                 //animate card flying out
                                 UIView.animateWithDuration(0.5, animations: { () -> Void in
                                     
-                                    cardImgView.center = CGPointMake(recognizer.view!.center.x, -50.0)
+                                    cardImgView.center = CGPointMake(cardImgView.center.x, -50.0)
                                 
                                 }, completion: { (success) -> Void in
                                     
@@ -610,6 +629,19 @@ class ViewController: UIViewController, MCAdvertiserAssistantDelegate, MCBrowser
                     phone.imageView.alpha = 0.5
                 })
             }
+            
+            //animate card return back
+            var phoneIdx = 0
+            for phone in self.connectedPhoneArray {
+            
+                for cardImgView in phone.cardArray {
+                
+                    self.animateCardReturned(phoneIdx, cardID: cardImgView.tag, isFront: cardImgView.isFront)
+                }
+                
+                phoneIdx++
+            }
+            
             break
         }
     }
@@ -627,9 +659,12 @@ class ViewController: UIViewController, MCAdvertiserAssistantDelegate, MCBrowser
             //Do animation on main thread
             
             let peerIndex = self.session.connectedPeers.indexOf(peerID)!
-            let phone = self.connectedPhoneArray[peerIndex]
-            let phoneImgView = phone.imageView
-                
+            //let phone = self.connectedPhoneArray[peerIndex]
+            //let phoneImgView = phone.imageView
+            
+            self.animateCardReturned(peerIndex, cardID: cardID, isFront: isFront)
+            
+            /*
             //get the card view
             let filteredArray = self.cardDisplayArray.filter() { $0.card.id == cardID }
             
@@ -646,6 +681,9 @@ class ViewController: UIViewController, MCAdvertiserAssistantDelegate, MCBrowser
                 let pos = cardImgView.position
                 let centerPos = self.cardOriginalPositionArray[pos]
                 
+                //remove card to Phone's card array
+                phone.cardArray.removeObject(cardImgView)
+                
                 UIView.animateWithDuration(0.7, animations: { () -> Void in
                     
                     cardImgView.center = centerPos
@@ -658,6 +696,7 @@ class ViewController: UIViewController, MCAdvertiserAssistantDelegate, MCBrowser
                         self.displayCardCounter()
                 })
             }//end if
+            */
         }
     }
     
@@ -674,5 +713,46 @@ class ViewController: UIViewController, MCAdvertiserAssistantDelegate, MCBrowser
     func session(session: MCSession, didReceiveStream stream: NSInputStream, withName streamName: String, fromPeer peerID: MCPeerID) {
         
         print("table didReceiveStream")
+    }
+    
+    //MARK: - Card Animation Helper
+    
+    func animateCardReturned(peerIndex: Int, cardID: Int, isFront:Bool) {
+    
+        //Connected phone
+        let phone = self.connectedPhoneArray[peerIndex]
+        let phoneImgView = phone.imageView
+        
+        //Get the card view
+        let filteredArray = self.cardDisplayArray.filter() { $0.card.id == cardID }
+        
+        if filteredArray.count == 1 {
+            
+            //exactly one match
+            let cardImgView = filteredArray.first!
+            cardImgView.isFront = isFront
+            cardImgView.image = isFront ? cardImgView.card.image : self.cardBackImage
+            cardImgView.center = phoneImgView.center
+            cardImgView.hidden = false
+            self.view.insertSubview(cardImgView, belowSubview: phoneImgView)
+            
+            let pos = cardImgView.position
+            let centerPos = self.cardOriginalPositionArray[pos]
+            
+            //remove card to Phone's card array
+            phone.cardArray.removeObject(cardImgView)
+            
+            UIView.animateWithDuration(0.7, animations: { () -> Void in
+                
+                cardImgView.center = centerPos
+                
+                }, completion: { (success) -> Void in
+                    
+                    cardImgView.isOut = false   //returning Card
+                    
+                    //display number of cards
+                    self.displayCardCounter()
+            })
+        }//end if
     }
 }
