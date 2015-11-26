@@ -262,14 +262,14 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				CODE_SIGN_IDENTITY = "iPhone Developer: Jacky Tjoa (PD9XCS234F)";
-				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer: Jacky Tjoa (PD9XCS234F)";
+				CODE_SIGN_IDENTITY = "iPhone Developer: Jacky Tjoa (ZX7C4DNNX6)";
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				INFOPLIST_FILE = MPCardTable/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 9.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = com.coolheart.MPCardTable;
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				PROVISIONING_PROFILE = "a4013168-f7c2-4996-bde1-263bf089e224";
+				PROVISIONING_PROFILE = "";
 			};
 			name = Debug;
 		};
@@ -277,14 +277,14 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				CODE_SIGN_IDENTITY = "iPhone Developer: Jacky Tjoa (PD9XCS234F)";
-				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer: Jacky Tjoa (PD9XCS234F)";
+				CODE_SIGN_IDENTITY = "iPhone Developer: Jacky Tjoa (ZX7C4DNNX6)";
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				INFOPLIST_FILE = MPCardTable/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 9.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = com.coolheart.MPCardTable;
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				PROVISIONING_PROFILE = "a4013168-f7c2-4996-bde1-263bf089e224";
+				PROVISIONING_PROFILE = "";
 			};
 			name = Release;
 		};

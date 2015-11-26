@@ -48,6 +48,13 @@ extension Array where Element: Equatable {
     }
 }
 
+enum CardStackStatus {
+    
+    case STACKED
+    case FANOUT
+    case DISTRIBUTED
+}
+
 class ViewController: UIViewController, MCAdvertiserAssistantDelegate, MCBrowserViewControllerDelegate, MCSessionDelegate {
     
     //UI
@@ -65,6 +72,7 @@ class ViewController: UIViewController, MCAdvertiserAssistantDelegate, MCBrowser
     let kStatusTextAdvertising = "Status: Advertising..."
     let kNumCardsText = "Num of Cards"
     let kNotConnectedText = "Not Connected"
+    var CARD_STACK_STATUS:CardStackStatus = .DISTRIBUTED
     
     //Multipeer Connectivity
     let kServiceType = "multi-peer-chat"
@@ -237,15 +245,31 @@ class ViewController: UIViewController, MCAdvertiserAssistantDelegate, MCBrowser
         singleTapGestureOnView.numberOfTouchesRequired = 1
         self.view.addGestureRecognizer(singleTapGestureOnView)
         
-        //Three finger swipe on self.view (Left)
+        //Two finger swipe on self.view
+        
+        //(Left)
+        let twoFingerSwipeLeft = UISwipeGestureRecognizer(target: self, action: "handleTwoFingerSwipe:")
+        twoFingerSwipeLeft.numberOfTouchesRequired = 2
+        twoFingerSwipeLeft.direction = .Left
+        self.view.addGestureRecognizer(twoFingerSwipeLeft)
+        
+        //(Right)
+        let twoFingerSwipeRight = UISwipeGestureRecognizer(target: self, action: "handleTwoFingerSwipe:")
+        twoFingerSwipeRight.numberOfTouchesRequired = 2
+        twoFingerSwipeRight.direction = .Right
+        self.view.addGestureRecognizer(twoFingerSwipeRight)
+        
+        //Three finger swipe on self.view
+        
+        //(Left)
         let threeFingerSwipeLeft = UISwipeGestureRecognizer(target: self, action: "handleThreeFingerSwipe:")
-        threeFingerSwipeLeft.numberOfTouchesRequired = 1
+        threeFingerSwipeLeft.numberOfTouchesRequired = 3
         threeFingerSwipeLeft.direction = .Left
         self.view.addGestureRecognizer(threeFingerSwipeLeft)
         
-        //Three finger swipe on self.view (Right)
+        //(Right)
         let threeFingerSwipeRight = UISwipeGestureRecognizer(target: self, action: "handleThreeFingerSwipe:")
-        threeFingerSwipeRight.numberOfTouchesRequired = 1
+        threeFingerSwipeRight.numberOfTouchesRequired = 3
         threeFingerSwipeRight.direction = .Right
         self.view.addGestureRecognizer(threeFingerSwipeRight)
         
@@ -326,6 +350,8 @@ class ViewController: UIViewController, MCAdvertiserAssistantDelegate, MCBrowser
         //let firstCardView = self.cardViewArray[0]
         //let diff_x:CGFloat = 72.475
         //let diff_y:CGFloat = 97.5
+        
+        self.CARD_STACK_STATUS = .DISTRIBUTED
         
         UIView.animateWithDuration(0.5, animations: { () -> Void in
             
@@ -524,17 +550,100 @@ class ViewController: UIViewController, MCAdvertiserAssistantDelegate, MCBrowser
         self.cardNameLbl.text = "No Card Selected"
     }
     
+    func handleTwoFingerSwipe(recognizer:UISwipeGestureRecognizer) {
+    
+        //Card must be in 'Stacked' position !
+        if self.CARD_STACK_STATUS == .STACKED {
+            
+            if recognizer.direction == .Right {
+            
+                //set card status
+                self.CARD_STACK_STATUS = .FANOUT
+                
+                //animate position
+                let offset:CGFloat = 15.0
+                UIView.animateWithDuration(0.5, animations: { () -> Void in
+                    
+                    for i in 1..<self.cardDisplayArray.count {
+                        
+                        let cardImgView = self.cardDisplayArray[i]
+                        cardImgView.frame = CGRectOffset(cardImgView.frame, offset * CGFloat(i), 0.0)
+                    }
+                })
+            }//end Right
+        }
+        else if self.CARD_STACK_STATUS == .FANOUT {
+        
+            if recognizer.direction == .Left {
+
+                //set card status
+                self.CARD_STACK_STATUS = .STACKED
+                
+                //animate position
+                if self.cardDisplayArray.count > 0 {
+                    
+                    //get first card position
+                    let firstCardImgView = self.cardDisplayArray[0]
+                    
+                    UIView.animateWithDuration(0.5, animations: { () -> Void in
+                        
+                        for cardImgView in self.cardDisplayArray {
+                            
+                            cardImgView.center = firstCardImgView.center
+                        }
+                    })
+                }
+            }//end Left
+        }
+    }
+    
     func handleThreeFingerSwipe(recognizer:UISwipeGestureRecognizer) {
         
         if recognizer.state == .Ended {
             
             if recognizer.direction == .Left {
             
-                print("swipe left !")
+                print("(three) swipe left !")
+                
+                //set card status
+                self.CARD_STACK_STATUS = .STACKED
+                
+                //animate position
+                if self.cardDisplayArray.count > 0 {
+                
+                    //get first card position
+                    let firstCardImgView = self.cardDisplayArray[0]
+                    
+                    UIView.animateWithDuration(0.5, animations: { () -> Void in
+                        
+                        for cardImgView in self.cardDisplayArray {
+                        
+                            cardImgView.center = firstCardImgView.center
+                        }
+                    })
+                }
             }
             else if recognizer.direction == .Right {
                 
-                print("swipe right !")
+                print("(three) swipe right !")
+                
+                //set card status
+                self.CARD_STACK_STATUS = .DISTRIBUTED
+                
+                //animate position
+                UIView.animateWithDuration(0.5, animations: { () -> Void in
+                    
+                    for i in 0..<self.cardDisplayArray.count {
+                        
+                        let cardImgView = self.cardDisplayArray[i]
+                        
+                        //move cards to the distributed position
+                        let centerPos = self.cardOriginalPositionArray[i]
+                        cardImgView.center = centerPos
+                    }
+                    
+                    }) { (success) -> Void in
+                }
             }
         }
     }
@@ -759,10 +868,15 @@ class ViewController: UIViewController, MCAdvertiserAssistantDelegate, MCBrowser
             cardImgView.image = isFront ? cardImgView.card.image : self.cardBackImage
             cardImgView.center = phoneImgView.center
             cardImgView.hidden = false
-            self.view.insertSubview(cardImgView, belowSubview: phoneImgView)
+            self.view.insertSubview(cardImgView, belowSubview: phoneImgView)//reposition views
             
             let pos = cardImgView.position
-            let centerPos = self.cardOriginalPositionArray[pos]
+            var centerPos = self.cardOriginalPositionArray[pos]
+            
+            if self.CARD_STACK_STATUS == .STACKED || self.CARD_STACK_STATUS == .FANOUT {
+                
+                centerPos = self.cardOriginalPositionArray[0]
+            }
             
             //remove card to Phone's card array
             phone.cardArray.removeObject(cardImgView)
