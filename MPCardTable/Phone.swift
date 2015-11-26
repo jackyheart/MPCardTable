@@ -7,10 +7,12 @@
 //
 
 import UIKit
+import MultipeerConnectivity
 
 class Phone: NSObject {
-
-    var name:String = "Not Connected"
+    
+    var peerID:MCPeerID! = nil
+    var nameLbl:UILabel! = nil
     var imageView:UIImageView! = nil
     var isConnected:Bool = false
     var cardArray:[CardImageView] = []//holder for 'out' Cards

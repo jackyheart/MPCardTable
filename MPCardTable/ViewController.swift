@@ -64,6 +64,7 @@ class ViewController: UIViewController, MCAdvertiserAssistantDelegate, MCBrowser
     let kStatusTextNotAdvertising = "Status: Not Advertising"
     let kStatusTextAdvertising = "Status: Advertising..."
     let kNumCardsText = "Num of Cards"
+    let kNotConnectedText = "Not Connected"
     
     //Multipeer Connectivity
     let kServiceType = "multi-peer-chat"
@@ -101,7 +102,8 @@ class ViewController: UIViewController, MCAdvertiserAssistantDelegate, MCBrowser
             phoneLbl.font = UIFont(name: phoneLbl.font.fontName, size: 17)
             phoneLbl.textColor = UIColor.whiteColor()
             phoneLbl.textAlignment = .Center
-            phoneLbl.text = "Not Connected"
+            phoneLbl.text = kNotConnectedText
+            phone.nameLbl = phoneLbl
             
             self.view.addSubview(phoneLbl)
         }
@@ -589,10 +591,12 @@ class ViewController: UIViewController, MCAdvertiserAssistantDelegate, MCBrowser
                 let index = self.session.connectedPeers.indexOf(peerID)!
                 let phone = self.connectedPhoneArray[index] as Phone
                 phone.isConnected = true
+                phone.peerID = peerID
                 
                 dispatch_async(dispatch_get_main_queue(), { () -> Void in
                 
                     phone.imageView.alpha = 1.0
+                    phone.nameLbl.text = peerID.displayName
                 })
 
                 print("index: \(index)")
@@ -619,28 +623,49 @@ class ViewController: UIViewController, MCAdvertiserAssistantDelegate, MCBrowser
             }
             else if (session.connectedPeers.count > 0){
                 
-                let index = self.session.connectedPeers.indexOf(peerID)!
-                let phone = self.connectedPhoneArray[index]
-                phone.isConnected = false
-                print("index: \(index)")
-                
-                dispatch_async(dispatch_get_main_queue(), { () -> Void in
+                var index = 0
+                for phone in self.connectedPhoneArray {
+                 
+                    if phone.peerID == peerID {
                     
-                    phone.imageView.alpha = 0.5
-                })
-            }
-            
-            //animate card return back
-            var phoneIdx = 0
-            for phone in self.connectedPhoneArray {
-            
-                for cardImgView in phone.cardArray {
-                
-                    self.animateCardReturned(phoneIdx, cardID: cardImgView.tag, isFront: cardImgView.isFront)
+                        let phone = self.connectedPhoneArray[index]
+                        phone.isConnected = false
+                        print("index: \(index)")
+                        
+                        dispatch_async(dispatch_get_main_queue(), { () -> Void in
+                            
+                            phone.imageView.alpha = 0.5
+                        })
+                        
+                        break
+                    }
+                    
+                    index++
                 }
-                
-                phoneIdx++
             }
+            
+            dispatch_async(dispatch_get_main_queue(), { () -> Void in
+            
+                var index = 0
+                for phone in self.connectedPhoneArray {
+                
+                    if phone.peerID == peerID {
+                    
+                        //animate card return back
+                        let phone = self.connectedPhoneArray[index]
+                        phone.nameLbl.text = self.kNotConnectedText
+                        
+                        for cardImgView in phone.cardArray {
+                            
+                            self.animateCardReturned(index, cardID: cardImgView.tag, isFront: cardImgView.isFront)
+                        }
+                        
+                        break
+                    }
+                    
+                    index++
+                }
+            })
             
             break
         }
