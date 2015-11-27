@@ -686,7 +686,8 @@ class ViewController: UIViewController, MCAdvertiserAssistantDelegate, MCBrowser
             print("Connecting..")
             
             print("peers count: \(session.connectedPeers.count)")
-            if (session.connectedPeers.count > 0){
+            
+            if (session.connectedPeers.contains(peerID)){
             
                 let index = self.session.connectedPeers.indexOf(peerID)!
                 print("index: \(index)")
@@ -696,7 +697,7 @@ class ViewController: UIViewController, MCAdvertiserAssistantDelegate, MCBrowser
         case .Connected:
             print("Connected..")
         
-            if (session.connectedPeers.count > 0){
+            if (session.connectedPeers.contains(peerID)){
                 let index = self.session.connectedPeers.indexOf(peerID)!
                 let phone = self.connectedPhoneArray[index] as Phone
                 phone.isConnected = true
@@ -792,45 +793,48 @@ class ViewController: UIViewController, MCAdvertiserAssistantDelegate, MCBrowser
             
             //Do animation on main thread
             
-            let peerIndex = self.session.connectedPeers.indexOf(peerID)!
-            //let phone = self.connectedPhoneArray[peerIndex]
-            //let phoneImgView = phone.imageView
+            if (self.session.connectedPeers.contains(peerID)) {
             
-            self.animateCardReturned(peerIndex, cardID: cardID, isFront: isFront)
-            
-            /*
-            //get the card view
-            let filteredArray = self.cardDisplayArray.filter() { $0.card.id == cardID }
-            
-            if filteredArray.count == 1 {
+                let peerIndex = self.session.connectedPeers.indexOf(peerID)!
+                //let phone = self.connectedPhoneArray[peerIndex]
+                //let phoneImgView = phone.imageView
                 
-                //exactly one match
-                let cardImgView = filteredArray.first!
-                cardImgView.isFront = isFront
-                cardImgView.image = isFront ? cardImgView.card.image : self.cardBackImage
-                cardImgView.center = phoneImgView.center
-                cardImgView.hidden = false
-                self.view.insertSubview(cardImgView, belowSubview: phoneImgView)
+                self.animateCardReturned(peerIndex, cardID: cardID, isFront: isFront)
                 
-                let pos = cardImgView.position
-                let centerPos = self.cardOriginalPositionArray[pos]
+                /*
+                //get the card view
+                let filteredArray = self.cardDisplayArray.filter() { $0.card.id == cardID }
                 
-                //remove card to Phone's card array
-                phone.cardArray.removeObject(cardImgView)
-                
-                UIView.animateWithDuration(0.7, animations: { () -> Void in
+                if filteredArray.count == 1 {
                     
-                    cardImgView.center = centerPos
+                    //exactly one match
+                    let cardImgView = filteredArray.first!
+                    cardImgView.isFront = isFront
+                    cardImgView.image = isFront ? cardImgView.card.image : self.cardBackImage
+                    cardImgView.center = phoneImgView.center
+                    cardImgView.hidden = false
+                    self.view.insertSubview(cardImgView, belowSubview: phoneImgView)
                     
-                    }, completion: { (success) -> Void in
+                    let pos = cardImgView.position
+                    let centerPos = self.cardOriginalPositionArray[pos]
+                    
+                    //remove card to Phone's card array
+                    phone.cardArray.removeObject(cardImgView)
+                    
+                    UIView.animateWithDuration(0.7, animations: { () -> Void in
                         
-                        cardImgView.isOut = false   //returning Card
+                        cardImgView.center = centerPos
                         
-                        //display number of cards
-                        self.displayCardCounter()
-                })
-            }//end if
-            */
+                        }, completion: { (success) -> Void in
+                            
+                            cardImgView.isOut = false   //returning Card
+                            
+                            //display number of cards
+                            self.displayCardCounter()
+                    })
+                }//end if
+                */
+            }
         }
     }
     
