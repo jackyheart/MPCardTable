@@ -9,25 +9,26 @@
 import UIKit
 import MultipeerConnectivity
 
-extension CollectionType {
+extension Collection {
     /// Return a copy of `self` with its elements shuffled
-    func shuffle() -> [Generator.Element] {
+    func shuffle() -> [Iterator.Element] {
         var list = Array(self)
         list.shuffleInPlace()
         return list
     }
 }
 
-extension MutableCollectionType where Index == Int {
+extension MutableCollection where Index == Int {
     /// Shuffle the elements of `self` in-place.
     mutating func shuffleInPlace() {
         // empty and single-element collections don't shuffle
         if count < 2 { return }
         
-        for i in 0..<count - 1 {
-            let j = Int(arc4random_uniform(UInt32(count - i))) + i
-            guard i != j else { continue }
-            swap(&self[i], &self[j])
+        for i in startIndex ..< endIndex - 1 {
+            let j = Int(arc4random_uniform(UInt32(endIndex - i))) + i
+            if i != j {
+                swap(&self[i], &self[j])
+            }
         }
     }
 }
@@ -35,13 +36,13 @@ extension MutableCollectionType where Index == Int {
 // Swift 2 Array Extension
 extension Array where Element: Equatable {
     
-    mutating func removeObject(object: Element) {
-        if let index = self.indexOf(object) {
-            self.removeAtIndex(index)
+    mutating func removeObject(_ object: Element) {
+        if let index = self.index(of: object) {
+            self.remove(at: index)
         }
     }
     
-    mutating func removeObjectsInArray(array: [Element]) {
+    mutating func removeObjectsInArray(_ array: [Element]) {
         for object in array {
             self.removeObject(object)
         }
@@ -50,9 +51,9 @@ extension Array where Element: Equatable {
 
 enum CardStackStatus {
     
-    case STACKED
-    case FANOUT
-    case DISTRIBUTED
+    case stacked
+    case fanout
+    case distributed
 }
 
 class ViewController: UIViewController, MCAdvertiserAssistantDelegate, MCBrowserViewControllerDelegate, MCSessionDelegate {
@@ -62,7 +63,7 @@ class ViewController: UIViewController, MCAdvertiserAssistantDelegate, MCBrowser
     var cardDisplayArray:[CardImageView] = [] // card array (as displayed)
     var cardOriginalPositionArray:[CGPoint] = [] // card original position array
     var connectedPhoneArray:[Phone] = [] //connected phones array
-    var startPoint:CGPoint = CGPointZero
+    var startPoint:CGPoint = CGPoint.zero
     let maxConnections = 4
     var cardBackImage:UIImage! = nil
     var numCardsLbl:UILabel! = nil
@@ -72,7 +73,7 @@ class ViewController: UIViewController, MCAdvertiserAssistantDelegate, MCBrowser
     let kStatusTextAdvertising = "Status: Advertising..."
     let kNumCardsText = "Num of Cards"
     let kNotConnectedText = "Not Connected"
-    var CARD_STACK_STATUS:CardStackStatus = .DISTRIBUTED
+    var CARD_STACK_STATUS:CardStackStatus = .distributed
     
     //Multipeer Connectivity
     let kServiceType = "multi-peer-chat"
@@ -80,7 +81,7 @@ class ViewController: UIViewController, MCAdvertiserAssistantDelegate, MCBrowser
     var session:MCSession!
     var browser:MCBrowserViewController!
     var advertiser:MCAdvertiserAssistant!
-    private var isAdvertising:Bool = false
+    fileprivate var isAdvertising:Bool = false
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -94,9 +95,9 @@ class ViewController: UIViewController, MCAdvertiserAssistantDelegate, MCBrowser
             
             let phoneImg = UIImage(named: "iphone6")
             let phoneImgView = UIImageView(image: phoneImg)
-            phoneImgView.transform = CGAffineTransformScale(phoneImgView.transform, 0.6, 0.6)//scale down
+            phoneImgView.transform = phoneImgView.transform.scaledBy(x: 0.6, y: 0.6)//scale down
             phoneImgView.alpha = 0.5
-            phoneImgView.center = CGPointMake(CGFloat(i + 1) * phoneOffset, phone_y)
+            phoneImgView.center = CGPoint(x: CGFloat(i + 1) * phoneOffset, y: phone_y)
             self.view.addSubview(phoneImgView)
             
             //add to Phone array
@@ -104,12 +105,12 @@ class ViewController: UIViewController, MCAdvertiserAssistantDelegate, MCBrowser
             self.connectedPhoneArray.append(phone)
             
             //phone label
-            let lblFrame = CGRectMake(0, 0, phoneImgView.frame.width + 50, 20)
+            let lblFrame = CGRect(x: 0, y: 0, width: phoneImgView.frame.width + 50, height: 20)
             let phoneLbl = UILabel(frame: lblFrame)
             phoneLbl.center =  CGPoint(x: phoneImgView.center.x, y: phoneImgView.center.y + 110)
             phoneLbl.font = UIFont(name: phoneLbl.font.fontName, size: 17)
-            phoneLbl.textColor = UIColor.whiteColor()
-            phoneLbl.textAlignment = .Center
+            phoneLbl.textColor = UIColor.white
+            phoneLbl.textAlignment = .center
             phoneLbl.text = kNotConnectedText
             phone.nameLbl = phoneLbl
             
@@ -120,30 +121,30 @@ class ViewController: UIViewController, MCAdvertiserAssistantDelegate, MCBrowser
         self.cardBackImage = UIImage(named: "card_back")
         
         //Status label
-        let statLbl = UILabel(frame: CGRectMake(40, 290, 200, 60))
+        let statLbl = UILabel(frame: CGRect(x: 40, y: 290, width: 200, height: 60))
         statLbl.text = kStatusTextNotAdvertising
-        statLbl.textColor = UIColor.whiteColor()
-        statLbl.textAlignment = .Left
+        statLbl.textColor = UIColor.white
+        statLbl.textAlignment = .left
         statLbl.font = UIFont(name: statLbl.font.fontName, size: 17)
         self.statusLbl = statLbl
         self.view.addSubview(self.statusLbl)
         
         //Name label
-        let cardLbl = UILabel(frame: CGRectMake(0, 290, 200, 60))
-        cardLbl.center = CGPointMake(self.view.frame.size.width * 0.5, cardLbl.center.y)
+        let cardLbl = UILabel(frame: CGRect(x: 0, y: 290, width: 200, height: 60))
+        cardLbl.center = CGPoint(x: self.view.frame.size.width * 0.5, y: cardLbl.center.y)
         cardLbl.text = "No Card Selected"
-        cardLbl.textColor = UIColor.whiteColor()
-        cardLbl.textAlignment = .Center
+        cardLbl.textColor = UIColor.white
+        cardLbl.textAlignment = .center
         cardLbl.font = UIFont(name: cardLbl.font.fontName, size: 17)
         self.cardNameLbl = cardLbl
         self.view.addSubview(self.cardNameLbl)
         
         //Num Cards label
         let lblWidth:CGFloat = 200
-        let numLbl = UILabel(frame: CGRectMake(self.view.frame.size.width - (lblWidth + 40), 290, lblWidth, 60))
+        let numLbl = UILabel(frame: CGRect(x: self.view.frame.size.width - (lblWidth + 40), y: 290, width: lblWidth, height: 60))
         numLbl.text = ""
-        numLbl.textColor = UIColor.whiteColor()
-        numLbl.textAlignment = .Right
+        numLbl.textColor = UIColor.white
+        numLbl.textAlignment = .right
         numLbl.font = UIFont(name: numLbl.font.fontName, size: 17)
         self.numCardsLbl = numLbl
         self.view.addSubview(self.numCardsLbl)
@@ -171,7 +172,7 @@ class ViewController: UIViewController, MCAdvertiserAssistantDelegate, MCBrowser
                     name = "Ace"
                 }
                 
-                let cardName = "\(name) of \(type.capitalizedString) "
+                let cardName = "\(name) of \(type.capitalized) "
                 
                 let imageName = String(format: "\(type)_%02d", i)
                 let image = UIImage(named: imageName)!
@@ -179,7 +180,7 @@ class ViewController: UIViewController, MCAdvertiserAssistantDelegate, MCBrowser
                 let card = Card(id: id, name: cardName, image: image)
                 self.cardDataArray.append(card)
                 
-                id++
+                id += 1
             }
         }
         
@@ -197,32 +198,32 @@ class ViewController: UIViewController, MCAdvertiserAssistantDelegate, MCBrowser
             
             //view
             let cardImgView = CardImageView(image: card.image)
-            cardImgView.transform = CGAffineTransformScale(cardImgView.transform, 0.7, 0.7)//scale down
-            cardImgView.userInteractionEnabled = true//enable this for gesture !
+            cardImgView.transform = cardImgView.transform.scaledBy(x: 0.7, y: 0.7)//scale down
+            cardImgView.isUserInteractionEnabled = true//enable this for gesture !
             cardImgView.card = card
             cardImgView.tag = card.id
             cardImgView.position = card.id
             
             //tap gesture (single tap)
-            let singleTapGesture = UITapGestureRecognizer(target: self, action: "handleSingleTap:")
+            let singleTapGesture = UITapGestureRecognizer(target: self, action: #selector(ViewController.handleSingleTap(_:)))
             singleTapGesture.numberOfTapsRequired = 1
             singleTapGesture.numberOfTouchesRequired = 1
             cardImgView.addGestureRecognizer(singleTapGesture)
             
             //tap gesture (double tap)
-            let doubleTapGesture = UITapGestureRecognizer(target: self, action: "handleDoubleTap:")
+            let doubleTapGesture = UITapGestureRecognizer(target: self, action: #selector(ViewController.handleDoubleTap(_:)))
             doubleTapGesture.numberOfTapsRequired = 2
             doubleTapGesture.numberOfTouchesRequired = 1
             cardImgView.addGestureRecognizer(doubleTapGesture)
             
             //pan gesture
-            let panGesture = UIPanGestureRecognizer(target: self, action: "handlePan:")
+            let panGesture = UIPanGestureRecognizer(target: self, action: #selector(ViewController.handlePan(_:)))
             panGesture.minimumNumberOfTouches = 1
             panGesture.maximumNumberOfTouches = 1
             cardImgView.addGestureRecognizer(panGesture)//add to view
             
             //positioning
-            if (index + 1) % 14 == 0 {
+            if (index + 1).truncatingRemainder(dividingBy: 14) == 0 {
                 
                 index = 0.0
                 y += (cardImgView.frame.size.height + offset)
@@ -236,11 +237,11 @@ class ViewController: UIViewController, MCAdvertiserAssistantDelegate, MCBrowser
             self.cardOriginalPositionArray.append(cardImgView.center)//card position
             self.view.addSubview(cardImgView)//add to view
             
-            index++
+            index += 1
         }
         
         //Tap gesture on self.view
-        let singleTapGestureOnView = UITapGestureRecognizer(target: self, action: "handleTapOnView:")
+        let singleTapGestureOnView = UITapGestureRecognizer(target: self, action: #selector(ViewController.handleTapOnView(_:)))
         singleTapGestureOnView.numberOfTapsRequired = 1
         singleTapGestureOnView.numberOfTouchesRequired = 1
         self.view.addGestureRecognizer(singleTapGestureOnView)
@@ -248,36 +249,36 @@ class ViewController: UIViewController, MCAdvertiserAssistantDelegate, MCBrowser
         //Two finger swipe on self.view
         
         //(Left)
-        let twoFingerSwipeLeft = UISwipeGestureRecognizer(target: self, action: "handleTwoFingerSwipe:")
+        let twoFingerSwipeLeft = UISwipeGestureRecognizer(target: self, action: #selector(ViewController.handleTwoFingerSwipe(_:)))
         twoFingerSwipeLeft.numberOfTouchesRequired = 2
-        twoFingerSwipeLeft.direction = .Left
+        twoFingerSwipeLeft.direction = .left
         self.view.addGestureRecognizer(twoFingerSwipeLeft)
         
         //(Right)
-        let twoFingerSwipeRight = UISwipeGestureRecognizer(target: self, action: "handleTwoFingerSwipe:")
+        let twoFingerSwipeRight = UISwipeGestureRecognizer(target: self, action: #selector(ViewController.handleTwoFingerSwipe(_:)))
         twoFingerSwipeRight.numberOfTouchesRequired = 2
-        twoFingerSwipeRight.direction = .Right
+        twoFingerSwipeRight.direction = .right
         self.view.addGestureRecognizer(twoFingerSwipeRight)
         
         //Three finger swipe on self.view
         
         //(Left)
-        let threeFingerSwipeLeft = UISwipeGestureRecognizer(target: self, action: "handleThreeFingerSwipe:")
+        let threeFingerSwipeLeft = UISwipeGestureRecognizer(target: self, action: #selector(ViewController.handleThreeFingerSwipe(_:)))
         threeFingerSwipeLeft.numberOfTouchesRequired = 3
-        threeFingerSwipeLeft.direction = .Left
+        threeFingerSwipeLeft.direction = .left
         self.view.addGestureRecognizer(threeFingerSwipeLeft)
         
         //(Right)
-        let threeFingerSwipeRight = UISwipeGestureRecognizer(target: self, action: "handleThreeFingerSwipe:")
+        let threeFingerSwipeRight = UISwipeGestureRecognizer(target: self, action: #selector(ViewController.handleThreeFingerSwipe(_:)))
         threeFingerSwipeRight.numberOfTouchesRequired = 3
-        threeFingerSwipeRight.direction = .Right
+        threeFingerSwipeRight.direction = .right
         self.view.addGestureRecognizer(threeFingerSwipeRight)
         
         //Multipeer Connectivity
         
         //session
-        self.peerID = MCPeerID(displayName: UIDevice.currentDevice().name)
-        self.session = MCSession(peer: self.peerID, securityIdentity: nil, encryptionPreference: .Required)
+        self.peerID = MCPeerID(displayName: UIDevice.current.name)
+        self.session = MCSession(peer: self.peerID, securityIdentity: nil, encryptionPreference: .required)
         self.session.delegate = self
         self.advertiser = MCAdvertiserAssistant(serviceType: kServiceType, discoveryInfo: nil, session: self.session)
         self.browser = MCBrowserViewController(serviceType: kServiceType, session: self.session)
@@ -291,19 +292,19 @@ class ViewController: UIViewController, MCAdvertiserAssistantDelegate, MCBrowser
     
     //MARK: - IBActions
     
-    @IBAction func startAdvertising(sender: AnyObject) {
+    @IBAction func startAdvertising(_ sender: AnyObject) {
         
         let btn = sender as! UIButton
         
         if !self.isAdvertising {
             
-            btn.setTitle("Stop Advertising", forState: .Normal)
+            btn.setTitle("Stop Advertising", for: UIControlState())
             self.statusLbl.text = kStatusTextAdvertising
             self.advertiser.start()
             
         } else {
             
-            btn.setTitle("Start Advertising", forState: .Normal)
+            btn.setTitle("Start Advertising", for: UIControlState())
             self.statusLbl.text = kStatusTextNotAdvertising
             self.advertiser.stop()
         }
@@ -311,9 +312,9 @@ class ViewController: UIViewController, MCAdvertiserAssistantDelegate, MCBrowser
         self.isAdvertising = !self.isAdvertising //toggle
     }
     
-    @IBAction func flip(sender: AnyObject) {
+    @IBAction func flip(_ sender: AnyObject) {
         
-        UIView.animateWithDuration(0.5, animations: { () -> Void in
+        UIView.animate(withDuration: 0.5, animations: { () -> Void in
             
             for cardImgView in self.cardDisplayArray {
                 
@@ -321,7 +322,7 @@ class ViewController: UIViewController, MCAdvertiserAssistantDelegate, MCBrowser
                 let card = self.cardDataArray[cardImgView.tag]
                 
                 //animate flip
-                let animationOptions:UIViewAnimationOptions = .TransitionFlipFromLeft
+                let animationOptions:UIViewAnimationOptions = .transitionFlipFromLeft
                 
                 if cardImgView.isFront {
                     cardImgView.image = self.cardBackImage //shows card back
@@ -329,19 +330,19 @@ class ViewController: UIViewController, MCAdvertiserAssistantDelegate, MCBrowser
                     cardImgView.image = card.image
                 }
                 
-                UIView.transitionWithView(cardImgView, duration: 0.5, options: animationOptions, animations: { () -> Void in
+                UIView.transition(with: cardImgView, duration: 0.5, options: animationOptions, animations: { () -> Void in
                     },
                     completion: nil)
                 
                 cardImgView.isFront = !cardImgView.isFront //toggle front/back
             }
             
-            }) { (success) -> Void in
+            }, completion: { (success) -> Void in
                 
-        }
+        }) 
     }
     
-    @IBAction func shuffle(sender: AnyObject) {
+    @IBAction func shuffle(_ sender: AnyObject) {
         
         //do the magic !
         self.cardDisplayArray.shuffleInPlace()
@@ -351,9 +352,9 @@ class ViewController: UIViewController, MCAdvertiserAssistantDelegate, MCBrowser
         //let diff_x:CGFloat = 72.475
         //let diff_y:CGFloat = 97.5
         
-        self.CARD_STACK_STATUS = .DISTRIBUTED
+        self.CARD_STACK_STATUS = .distributed
         
-        UIView.animateWithDuration(0.5, animations: { () -> Void in
+        UIView.animate(withDuration: 0.5, animations: { () -> Void in
             
             for i in 0..<self.cardDisplayArray.count {
                 
@@ -370,13 +371,13 @@ class ViewController: UIViewController, MCAdvertiserAssistantDelegate, MCBrowser
                 cardImgView.position = i
             }
             
-            }) { (success) -> Void in
-        }
+            }, completion: { (success) -> Void in
+        }) 
     }
     
     //MARK: - Helpers
     
-    func showCardName(cardImgView: CardImageView) {
+    func showCardName(_ cardImgView: CardImageView) {
         
         let card = self.cardDataArray[cardImgView.tag] //retrieve Card
         self.cardNameLbl.text = card.name
@@ -392,7 +393,7 @@ class ViewController: UIViewController, MCAdvertiserAssistantDelegate, MCBrowser
     
     //MARK: - UIGestureRecognizers
     
-    func handleSingleTap(recognizer:UITapGestureRecognizer) {
+    func handleSingleTap(_ recognizer:UITapGestureRecognizer) {
         
         //single tap
         
@@ -403,7 +404,7 @@ class ViewController: UIViewController, MCAdvertiserAssistantDelegate, MCBrowser
         }
     }
     
-    func handleDoubleTap(recognizer:UITapGestureRecognizer) {
+    func handleDoubleTap(_ recognizer:UITapGestureRecognizer) {
         
         //double tap
         
@@ -415,16 +416,16 @@ class ViewController: UIViewController, MCAdvertiserAssistantDelegate, MCBrowser
             let card = self.cardDataArray[cardImgView.tag]
             
             //animate flip
-            var animationOptions:UIViewAnimationOptions = .TransitionFlipFromLeft
+            var animationOptions:UIViewAnimationOptions = .transitionFlipFromLeft
             
             if cardImgView.isFront {
                 cardImgView.image = self.cardBackImage //shows card back
             } else {
-                animationOptions = .TransitionFlipFromRight
+                animationOptions = .transitionFlipFromRight
                 cardImgView.image = card.image
             }
             
-            UIView.transitionWithView(recognizer.view!, duration: 0.5, options: animationOptions, animations: { () -> Void in
+            UIView.transition(with: recognizer.view!, duration: 0.5, options: animationOptions, animations: { () -> Void in
                 },
                 completion: nil)
             
@@ -432,7 +433,7 @@ class ViewController: UIViewController, MCAdvertiserAssistantDelegate, MCBrowser
         }
     }
     
-    func handlePan(recognizer:UIPanGestureRecognizer) {
+    func handlePan(_ recognizer:UIPanGestureRecognizer) {
         
         /*
         var dictionaryExample : [String:AnyObject] = ["user":"UserName", "pass":"password", "token":"0123456789", "image":0] // image should be either NSData or empty
@@ -442,20 +443,20 @@ class ViewController: UIViewController, MCAdvertiserAssistantDelegate, MCBrowser
         
         let cardImgView = recognizer.view as! CardImageView
         
-        if recognizer.state == .Cancelled {
+        if recognizer.state == .cancelled {
             
             print("cancelled\n")
         }
-        else if recognizer.state == .Began {
+        else if recognizer.state == .began {
             
             self.startPoint = recognizer.view!.center
             self.showCardName(cardImgView)//display card name
         }
-        else if recognizer.state == .Changed {
+        else if recognizer.state == .changed {
             
-            let translation = recognizer.translationInView(self.view)
+            let translation = recognizer.translation(in: self.view)
             recognizer.view!.center = CGPoint(x: recognizer.view!.center.x + translation.x, y: recognizer.view!.center.y + translation.y)
-            recognizer.setTranslation(CGPointZero, inView: self.view)
+            recognizer.setTranslation(CGPoint.zero, in: self.view)
             
             for phone in self.connectedPhoneArray {
                 
@@ -463,18 +464,18 @@ class ViewController: UIViewController, MCAdvertiserAssistantDelegate, MCBrowser
                 
                     let phoneImgView = phone.imageView
                     
-                    if CGRectContainsPoint(phoneImgView.frame, recognizer.view!.center) {
+                    if (phoneImgView?.frame.contains(recognizer.view!.center))! {
                         
-                        phoneImgView.layer.opacity = 0.5
+                        phoneImgView?.layer.opacity = 0.5
                     
                     } else {
                     
-                        phoneImgView.layer.opacity = 1.0
+                        phoneImgView?.layer.opacity = 1.0
                     }
                 }
             }
         }
-        else if recognizer.state == .Ended {
+        else if recognizer.state == .ended {
             
             var isSendingData = false
             var phoneIndex:Int = 0
@@ -484,36 +485,36 @@ class ViewController: UIViewController, MCAdvertiserAssistantDelegate, MCBrowser
                     
                     let phoneImgView = phone.imageView
                     
-                    if CGRectContainsPoint(phoneImgView.frame, recognizer.view!.center) {
+                    if (phoneImgView?.frame.contains(recognizer.view!.center))! {
                         
-                        phoneImgView.layer.opacity = 1.0
+                        phoneImgView?.layer.opacity = 1.0
                         
                         //send data
                         if self.session.connectedPeers.count > 0 {
                             
-                            let cardDict = ["id":cardImgView.tag, "isFront":cardImgView.isFront]
-                            let cardArchivedData = NSKeyedArchiver.archivedDataWithRootObject(cardDict)
+                            let cardDict = ["id":cardImgView.tag, "isFront":cardImgView.isFront] as [String : Any]
+                            let cardArchivedData = NSKeyedArchiver.archivedData(withRootObject: cardDict)
                             let peerID = self.session.connectedPeers[phoneIndex]
                             
                             do {
                                 
                                 isSendingData = true
                                 
-                                try self.session.sendData(cardArchivedData, toPeers: [peerID], withMode: .Reliable)
+                                try self.session.send(cardArchivedData, toPeers: [peerID], with: .reliable)
                                 
                                 //add card to Phone's card array
                                 phone.cardArray.append(cardImgView)
                                 
                                 //animate card flying out
-                                UIView.animateWithDuration(0.5, animations: { () -> Void in
+                                UIView.animate(withDuration: 0.5, animations: { () -> Void in
                                     
-                                    cardImgView.center = CGPointMake(cardImgView.center.x, -50.0)
+                                    cardImgView.center = CGPoint(x: cardImgView.center.x, y: -50.0)
                                 
                                 }, completion: { (success) -> Void in
                                     
                                     self.cardNameLbl.text = "No Card Selected"
                                     cardImgView.isOut = true
-                                    cardImgView.hidden = true
+                                    cardImgView.isHidden = true
                                     
                                     //display number of cards
                                     self.displayCardCounter()
@@ -527,14 +528,14 @@ class ViewController: UIViewController, MCAdvertiserAssistantDelegate, MCBrowser
                     }
                 }
                 
-                phoneIndex++
+                phoneIndex += 1
             }
 
             if !isSendingData {
                 
                 //if not sending data, return card
             
-                UIView.animateWithDuration(0.5, animations: { () -> Void in
+                UIView.animate(withDuration: 0.5, animations: { () -> Void in
                     
                     recognizer.view!.center = self.startPoint
                     
@@ -545,39 +546,39 @@ class ViewController: UIViewController, MCAdvertiserAssistantDelegate, MCBrowser
         }
     }
     
-    func handleTapOnView(recognizer:UITapGestureRecognizer) {
+    func handleTapOnView(_ recognizer:UITapGestureRecognizer) {
         
         self.cardNameLbl.text = "No Card Selected"
     }
     
-    func handleTwoFingerSwipe(recognizer:UISwipeGestureRecognizer) {
+    func handleTwoFingerSwipe(_ recognizer:UISwipeGestureRecognizer) {
     
         //Card must be in 'Stacked' position !
-        if self.CARD_STACK_STATUS == .STACKED {
+        if self.CARD_STACK_STATUS == .stacked {
             
-            if recognizer.direction == .Right {
+            if recognizer.direction == .right {
             
                 //set card status
-                self.CARD_STACK_STATUS = .FANOUT
+                self.CARD_STACK_STATUS = .fanout
                 
                 //animate position
                 let offset:CGFloat = 15.0
-                UIView.animateWithDuration(0.5, animations: { () -> Void in
+                UIView.animate(withDuration: 0.5, animations: { () -> Void in
                     
                     for i in 1..<self.cardDisplayArray.count {
                         
                         let cardImgView = self.cardDisplayArray[i]
-                        cardImgView.frame = CGRectOffset(cardImgView.frame, offset * CGFloat(i), 0.0)
+                        cardImgView.frame = cardImgView.frame.offsetBy(dx: offset * CGFloat(i), dy: 0.0)
                     }
                 })
             }//end Right
         }
-        else if self.CARD_STACK_STATUS == .FANOUT {
+        else if self.CARD_STACK_STATUS == .fanout {
         
-            if recognizer.direction == .Left {
+            if recognizer.direction == .left {
 
                 //set card status
-                self.CARD_STACK_STATUS = .STACKED
+                self.CARD_STACK_STATUS = .stacked
                 
                 //animate position
                 if self.cardDisplayArray.count > 0 {
@@ -585,7 +586,7 @@ class ViewController: UIViewController, MCAdvertiserAssistantDelegate, MCBrowser
                     //get first card position
                     let firstCardImgView = self.cardDisplayArray[0]
                     
-                    UIView.animateWithDuration(0.5, animations: { () -> Void in
+                    UIView.animate(withDuration: 0.5, animations: { () -> Void in
                         
                         for cardImgView in self.cardDisplayArray {
                             
@@ -597,16 +598,16 @@ class ViewController: UIViewController, MCAdvertiserAssistantDelegate, MCBrowser
         }
     }
     
-    func handleThreeFingerSwipe(recognizer:UISwipeGestureRecognizer) {
+    func handleThreeFingerSwipe(_ recognizer:UISwipeGestureRecognizer) {
         
-        if recognizer.state == .Ended {
+        if recognizer.state == .ended {
             
-            if recognizer.direction == .Left {
+            if recognizer.direction == .left {
             
                 print("(three) swipe left !")
                 
                 //set card status
-                self.CARD_STACK_STATUS = .STACKED
+                self.CARD_STACK_STATUS = .stacked
                 
                 //animate position
                 if self.cardDisplayArray.count > 0 {
@@ -614,7 +615,7 @@ class ViewController: UIViewController, MCAdvertiserAssistantDelegate, MCBrowser
                     //get first card position
                     let firstCardImgView = self.cardDisplayArray[0]
                     
-                    UIView.animateWithDuration(0.5, animations: { () -> Void in
+                    UIView.animate(withDuration: 0.5, animations: { () -> Void in
                         
                         for cardImgView in self.cardDisplayArray {
                         
@@ -623,15 +624,15 @@ class ViewController: UIViewController, MCAdvertiserAssistantDelegate, MCBrowser
                     })
                 }
             }
-            else if recognizer.direction == .Right {
+            else if recognizer.direction == .right {
                 
                 print("(three) swipe right !")
                 
                 //set card status
-                self.CARD_STACK_STATUS = .DISTRIBUTED
+                self.CARD_STACK_STATUS = .distributed
                 
                 //animate position
-                UIView.animateWithDuration(0.5, animations: { () -> Void in
+                UIView.animate(withDuration: 0.5, animations: { () -> Void in
                     
                     for i in 0..<self.cardDisplayArray.count {
                         
@@ -642,27 +643,27 @@ class ViewController: UIViewController, MCAdvertiserAssistantDelegate, MCBrowser
                         cardImgView.center = centerPos
                     }
                     
-                    }) { (success) -> Void in
-                }
+                    }, completion: { (success) -> Void in
+                }) 
             }
         }
     }
     
     //MARK: - MCBrowserViewControllerDelegate
     
-    func browserViewControllerDidFinish(browserViewController: MCBrowserViewController) {
+    func browserViewControllerDidFinish(_ browserViewController: MCBrowserViewController) {
         
-        self.browser.dismissViewControllerAnimated(true, completion: nil)
+        self.browser.dismiss(animated: true, completion: nil)
     }
     
-    func browserViewControllerWasCancelled(browserViewController: MCBrowserViewController) {
+    func browserViewControllerWasCancelled(_ browserViewController: MCBrowserViewController) {
         
-        self.browser.dismissViewControllerAnimated(true, completion: nil)
+        self.browser.dismiss(animated: true, completion: nil)
     }
     
     //MARK: - MCAdvertiserAssistantDelegate
     
-    func advertiserAssistantDidDismissInvitation(advertiserAssistant: MCAdvertiserAssistant) {
+    func advertiserAssistantDidDismissInvitation(_ advertiserAssistant: MCAdvertiserAssistant) {
         
         print("advertiserAssistantDidDismissInvitation")
         print("connectedPeers: \(self.session.connectedPeers)")
@@ -670,49 +671,49 @@ class ViewController: UIViewController, MCAdvertiserAssistantDelegate, MCBrowser
     
     //MARK: - MCSessionDelegate
     
-    func session(session: MCSession, didReceiveCertificate certificate: [AnyObject]?, fromPeer peerID: MCPeerID, certificateHandler: (Bool) -> Void) {
+    func session(_ session: MCSession, didReceiveCertificate certificate: [Any]?, fromPeer peerID: MCPeerID, certificateHandler: @escaping (Bool) -> Void) {
      
         return certificateHandler(true)
     }
     
-    func session(session: MCSession, peer peerID: MCPeerID, didChangeState state: MCSessionState) {
+    func session(_ session: MCSession, peer peerID: MCPeerID, didChange state: MCSessionState) {
         
         print("myPeerID: \(self.session.myPeerID)")
         print("connectd peerID: \(peerID)")
         
         switch state {
             
-        case .Connecting:
+        case .connecting:
             print("Connecting..")
             
             print("peers count: \(session.connectedPeers.count)")
             if (session.connectedPeers.count > 0){
             
-                let index = self.session.connectedPeers.indexOf(peerID)!
+                let index = self.session.connectedPeers.index(of: peerID)!
                 print("index: \(index)")
             }
             break
             
-        case .Connected:
+        case .connected:
             print("Connected..")
         
             if (session.connectedPeers.count > 0){
-                let index = self.session.connectedPeers.indexOf(peerID)!
+                let index = self.session.connectedPeers.index(of: peerID)!
                 let phone = self.connectedPhoneArray[index] as Phone
                 phone.isConnected = true
                 phone.peerID = peerID
                 
-                dispatch_async(dispatch_get_main_queue(), { () -> Void in
+                DispatchQueue.main.async(execute: { () -> Void in
                 
-                    phone.imageView.alpha = 1.0
-                    phone.nameLbl.text = peerID.displayName
+                    phone.imageView?.alpha = 1.0
+                    phone.nameLbl?.text = peerID.displayName
                 })
 
                 print("index: \(index)")
             }
             break
             
-        case .NotConnected:
+        case .notConnected:
             
             print("Not Connected..")
         
@@ -720,14 +721,11 @@ class ViewController: UIViewController, MCAdvertiserAssistantDelegate, MCBrowser
             
             if (session.connectedPeers.count == 0){
             
-                for phone in self.connectedPhoneArray {
-                
-                    phone.isConnected = false
-                    
-                    dispatch_async(dispatch_get_main_queue(), { () -> Void in
-                        
-                        phone.imageView.alpha = 0.5
-                    })
+                DispatchQueue.main.async {
+                    for phone in self.connectedPhoneArray {
+                        phone.isConnected = false
+                        phone.imageView?.alpha = 0.5
+                    }
                 }
             }
             else if (session.connectedPeers.count > 0){
@@ -741,19 +739,19 @@ class ViewController: UIViewController, MCAdvertiserAssistantDelegate, MCBrowser
                         phone.isConnected = false
                         print("index: \(index)")
                         
-                        dispatch_async(dispatch_get_main_queue(), { () -> Void in
+                        DispatchQueue.main.async(execute: { () -> Void in
                             
-                            phone.imageView.alpha = 0.5
+                            phone.imageView?.alpha = 0.5
                         })
                         
                         break
                     }
                     
-                    index++
+                    index += 1
                 }
             }
             
-            dispatch_async(dispatch_get_main_queue(), { () -> Void in
+            DispatchQueue.main.async(execute: { () -> Void in
             
                 var index = 0
                 for phone in self.connectedPhoneArray {
@@ -762,7 +760,7 @@ class ViewController: UIViewController, MCAdvertiserAssistantDelegate, MCBrowser
                     
                         //animate card return back
                         let phone = self.connectedPhoneArray[index]
-                        phone.nameLbl.text = self.kNotConnectedText
+                        phone.nameLbl?.text = self.kNotConnectedText
                         
                         for cardImgView in phone.cardArray {
                             
@@ -772,7 +770,7 @@ class ViewController: UIViewController, MCAdvertiserAssistantDelegate, MCBrowser
                         break
                     }
                     
-                    index++
+                    index += 1
                 }
             })
             
@@ -780,19 +778,19 @@ class ViewController: UIViewController, MCAdvertiserAssistantDelegate, MCBrowser
         }
     }
     
-    func session(session: MCSession, didReceiveData data: NSData, fromPeer peerID: MCPeerID) {
+    func session(_ session: MCSession, didReceive data: Data, fromPeer peerID: MCPeerID) {
         
-        let cardDict:NSDictionary = NSKeyedUnarchiver.unarchiveObjectWithData(data) as! NSDictionary
+        let cardDict:NSDictionary = NSKeyedUnarchiver.unarchiveObject(with: data) as! NSDictionary
         let cardID = cardDict["id"] as! Int
         let isFront = cardDict["isFront"] as! Bool
         
         print("didReceiveData: \(cardDict)")
         
-        dispatch_async(dispatch_get_main_queue()) { () -> Void in
+        DispatchQueue.main.async { () -> Void in
             
             //Do animation on main thread
             
-            let peerIndex = self.session.connectedPeers.indexOf(peerID)!
+            let peerIndex = self.session.connectedPeers.index(of: peerID)!
             //let phone = self.connectedPhoneArray[peerIndex]
             //let phoneImgView = phone.imageView
             
@@ -834,24 +832,24 @@ class ViewController: UIViewController, MCAdvertiserAssistantDelegate, MCBrowser
         }
     }
     
-    func session(session: MCSession, didStartReceivingResourceWithName resourceName: String, fromPeer peerID: MCPeerID, withProgress progress: NSProgress) {
+    func session(_ session: MCSession, didStartReceivingResourceWithName resourceName: String, fromPeer peerID: MCPeerID, with progress: Progress) {
         
         print("table didStartReceivingResourceWithName")
     }
     
-    func session(session: MCSession, didFinishReceivingResourceWithName resourceName: String, fromPeer peerID: MCPeerID, atURL localURL: NSURL, withError error: NSError?) {
+    func session(_ session: MCSession, didFinishReceivingResourceWithName resourceName: String, fromPeer peerID: MCPeerID, at localURL: URL, withError error: Error?) {
         
         print("table didFinishReceivingResourceWithName")
     }
     
-    func session(session: MCSession, didReceiveStream stream: NSInputStream, withName streamName: String, fromPeer peerID: MCPeerID) {
+    func session(_ session: MCSession, didReceive stream: InputStream, withName streamName: String, fromPeer peerID: MCPeerID) {
         
         print("table didReceiveStream")
     }
     
     //MARK: - Card Animation Helper
     
-    func animateCardReturned(peerIndex: Int, cardID: Int, isFront:Bool) {
+    func animateCardReturned(_ peerIndex: Int, cardID: Int, isFront:Bool) {
     
         //Connected phone
         let phone = self.connectedPhoneArray[peerIndex]
@@ -866,14 +864,14 @@ class ViewController: UIViewController, MCAdvertiserAssistantDelegate, MCBrowser
             let cardImgView = filteredArray.first!
             cardImgView.isFront = isFront
             cardImgView.image = isFront ? cardImgView.card.image : self.cardBackImage
-            cardImgView.center = phoneImgView.center
-            cardImgView.hidden = false
-            self.view.insertSubview(cardImgView, belowSubview: phoneImgView)//reposition views
+            cardImgView.center = (phoneImgView?.center)!
+            cardImgView.isHidden = false
+            self.view.insertSubview(cardImgView, belowSubview: phoneImgView!)//reposition views
             
             let pos = cardImgView.position
-            var centerPos = self.cardOriginalPositionArray[pos]
+            var centerPos = self.cardOriginalPositionArray[pos!]
             
-            if self.CARD_STACK_STATUS == .STACKED || self.CARD_STACK_STATUS == .FANOUT {
+            if self.CARD_STACK_STATUS == .stacked || self.CARD_STACK_STATUS == .fanout {
                 
                 centerPos = self.cardOriginalPositionArray[0]
             }
@@ -881,7 +879,7 @@ class ViewController: UIViewController, MCAdvertiserAssistantDelegate, MCBrowser
             //remove card to Phone's card array
             phone.cardArray.removeObject(cardImgView)
             
-            UIView.animateWithDuration(0.7, animations: { () -> Void in
+            UIView.animate(withDuration: 0.7, animations: { () -> Void in
                 
                 cardImgView.center = centerPos
                 
